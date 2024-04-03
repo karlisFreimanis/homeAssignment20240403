@@ -25,6 +25,9 @@ composer install
 ```
 php bin/console doctrine:migrations:migrate
 ```
+```
+php bin/console dummyData 1000
+```
 ### Api docs
 ```
 http://127.0.0.1:3003/api/doc
@@ -64,6 +67,22 @@ php bin/console make:entity Transaction
 from/to ManyToOne->Account
 ```
 php bin/console make:migration
+```
+Chose ecb for rates input. Most likely better limits
+[ECB XML](http://www.ecb.int/stats/eurofxref/eurofxref-daily.xml)  
+Generate some fake data to work with
+```
+php bin/console make:command dummyData
+```
+```
+php bin/console dummyData 1000
+```
+Make transfer funds api that saves transaction request  
+Make queue that process new transactions  
+Fail transactions that didn't process
+Add new container that process queue in background
+```
+```
 ```
 ```
 ```

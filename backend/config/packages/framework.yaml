@@ -1,12 +1,5 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
-    messenger:
-        transports:
-            async: "%env(MESSENGER_TRANSPORT_DSN)%"
-
-        routing:
-            # async is whatever name you gave your transport above
-            'App\Message\DummyMessage': async
     secret: '%env(APP_SECRET)%'
     #csrf_protection: true
 

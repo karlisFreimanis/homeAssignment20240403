@@ -2,14 +2,34 @@ framework:
   messenger:
     # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
     # failure_transport: failed
-
+    failure_transport: failed_transactions
     transports:
+      transactions:
+        dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+        options:
+          auto_setup: true
+        failure_transport: failed_transactions
+        retry_strategy:
+          max_retries: 5
+          delay: 1000
+          multiplier: 2
+          max_delay: 0
+      failed_transactions:
+        dsn: '%env(MESSENGER_TRANSPORT_FAILED_DSN)%'
+        options:
+          auto_setup: true
+        retry_strategy:
+          max_retries: 10
+          delay: 1000
+          multiplier: 2
+          max_delay: 0
     # https://symfony.com/doc/current/messenger.html#transport-configuration
     # async: '%env(MESSENGER_TRANSPORT_DSN)%'
     # failed: 'doctrine://default?queue_name=failed'
     # sync: 'sync://'
 
     routing:
+      'App\Message\TransactionMessage': [transactions, failed_transactions]
     # Route your messages to the transports
     # 'App\Message\YourMessage': async
 

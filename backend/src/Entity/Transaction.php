@@ -9,6 +9,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: TransactionRepository::class)]
 class Transaction
 {
+    public const STATUS_PENDING   = 0;
+    public const STATUS_PROCESSED = 1;
+    public const STATUS_DECLINED  = 2;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -26,13 +30,16 @@ class Transaction
     private ?int $status = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 8)]
-    private ?string $amount = null;
+    private ?string $fromAmount = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $created = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $processed = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 8, nullable: true)]
+    private ?string $toAmount = null;
 
     public function getId(): ?int
     {
@@ -75,14 +82,14 @@ class Transaction
         return $this;
     }
 
-    public function getAmount(): ?string
+    public function getFromAmount(): ?string
     {
-        return $this->amount;
+        return $this->fromAmount;
     }
 
-    public function setAmount(string $amount): static
+    public function setFromAmount(string $fromAmount): static
     {
-        $this->amount = $amount;
+        $this->fromAmount = $fromAmount;
 
         return $this;
     }
@@ -107,6 +114,18 @@ class Transaction
     public function setProcessed(\DateTimeInterface $processed): static
     {
         $this->processed = $processed;
+
+        return $this;
+    }
+
+    public function getToAmount(): ?string
+    {
+        return $this->toAmount;
+    }
+
+    public function setToAmount(?string $toAmount): static
+    {
+        $this->toAmount = $toAmount;
 
         return $this;
     }
