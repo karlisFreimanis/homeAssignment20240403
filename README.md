@@ -59,8 +59,11 @@ with different currencies)
 
 Ask chatgpt to generate documentation
 ```
+php bin/console make:entity Transaction
 ```
+from/to ManyToOne->Account
 ```
+php bin/console make:migration
 ```
 ```
 ```

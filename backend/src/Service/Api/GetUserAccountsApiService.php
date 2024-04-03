@@ -28,7 +28,7 @@ readonly class GetUserAccountsApiService
         $user   = $this->userRepository->find($userId);
 
         if (empty($user)) {
-            throw new ApiValidationException("User by id:" . $userId . " don't exists!");
+            throw new ApiValidationException("User with id:" . $userId . " don't exists!");
         }
 
         $accounts = [];
