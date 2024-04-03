@@ -1,11 +1,11 @@
 nelmio_api_doc:
     documentation:
         info:
-            title: Template
-            description: Basic template
+            title: homeAssignment20240403
+            description: homeAssignment20240403 api doc
             version: 1.0.0
         servers:
-            - url: http://127.0.0.1
+            - url: http://127.0.0.1:3003
               description: API dev path
     areas:
         path_patterns:

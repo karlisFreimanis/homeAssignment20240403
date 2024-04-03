@@ -53,6 +53,11 @@ php bin/console make:migration
 ```
 php bin/console doctrine:migrations:migrate
 ```
+Make endpoint for  
+Given a client id return list of accounts (each client might have 0 or more accounts
+with different currencies)  
+
+Ask chatgpt to generate documentation
 ```
 ```
 ```
