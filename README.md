@@ -35,4 +35,31 @@ http://127.0.0.1:3003/api/doc
 php vendor/bin/phpunit --coverage-html coverage
 ```
 
+### Development notes
+```
+php bin/console make:entity User
+```
+```
+php bin/console make:entity Currency
+```
+```
+php bin/console make:entity Account
+```
+ManyToOne->User  
+ManyToOne->Currency
+```
+php bin/console make:migration
+```
+```
+php bin/console doctrine:migrations:migrate
+```
+```
+```
+```
+```
+```
+```
+```
+```
+```
 
