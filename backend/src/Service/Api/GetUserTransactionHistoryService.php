@@ -38,7 +38,7 @@ readonly class GetUserTransactionHistoryService
         }
 
         return [
-            'data' => $this->mapResult($this->transactionRepository->getAccountTransactions($account)),
+            'data' => $this->mapResult($this->transactionRepository->getAccountTransactions($account, $request->get('limit'), $request->get('offset'))),
             'total' => $this->transactionRepository->countAccountTransactions($account),
         ];
     }
@@ -56,9 +56,10 @@ readonly class GetUserTransactionHistoryService
                 'fromAccountId' => $transaction->getFromAccount()->getId(),
                 'toAccountId' => $transaction->getToAccount()->getId(),
                 'status' => $transaction->getStatus(),
-                'amount' => $transaction->getAmount(),
+                'fromAmount' => $transaction->getFromAmount(),
+                'toAmount' => $transaction->getToAmount(),
                 'created' => $transaction->getCreated()->format(DateTimeHelper::DATE_TIME_FORMAT),
-                'processed' => $transaction->getProcessed()->format(DateTimeHelper::DATE_TIME_FORMAT),
+                'processed' => empty($transaction->getProcessed()) ? null : $transaction->getProcessed()->format(DateTimeHelper::DATE_TIME_FORMAT),
             ];
         }
         return $transactionsMapped;
