@@ -2,6 +2,7 @@
 
 namespace App\Service\Api;
 
+use App\Entity\Account;
 use App\Entity\Transaction;
 use App\Exception\ApiValidationException;
 use App\Message\TransactionMessage;
@@ -9,9 +10,10 @@ use App\Repository\AccountRepository;
 use App\Repository\TransactionRepository;
 use App\Service\CurrencyExchangeService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-readonly class TransferFondsApiService
+class TransferFondsApiService
 {
     /**
      * @param AccountRepository       $accountRepository
@@ -21,23 +23,24 @@ readonly class TransferFondsApiService
      * @param TransactionRepository   $transactionRepository
      */
     public function __construct(
-        public AccountRepository       $accountRepository,
-        public EntityManagerInterface  $entityManager,
-        public CurrencyExchangeService $currencyExchangeService,
-        public MessageBusInterface     $messageBus,
-        public TransactionRepository   $transactionRepository,
+        readonly private AccountRepository       $accountRepository,
+        readonly private EntityManagerInterface  $entityManager,
+        readonly private CurrencyExchangeService $currencyExchangeService,
+        readonly private MessageBusInterface     $messageBus,
+        readonly private TransactionRepository   $transactionRepository,
     ) {
     }
 
     /**
-     * @param int|null   $fromAccountId
-     * @param int|null   $toAccountId
-     * @param float|null $amount
+     * @param Request $request
      * @return array
      * @throws ApiValidationException
      */
-    public function fire(?int $fromAccountId, ?int $toAccountId, ?float $amount): array
+    public function handle(Request $request): array
     {
+        $fromAccountId = $request->get('fromAccountId') ?? null;
+        $toAccountId   = $request->get('toAccountId') ?? null;
+        $amount        = $request->get('amount') ?? null;
         if ($fromAccountId === $toAccountId) {
             throw new ApiValidationException('Transaction allowed only between different accounts');
         }
@@ -46,7 +49,7 @@ readonly class TransferFondsApiService
             throw new ApiValidationException('Account with id: ' . $fromAccountId . " doesn't exist");
         }
 
-        if ($fromAccount->getBalance() < $amount) {
+        if (floatval($fromAccount->getBalance()) < floatval($amount)) {
             throw new ApiValidationException('Balance to low ' . $fromAccount->getBalance() . ' required ' . $amount);
         }
 
@@ -55,6 +58,14 @@ readonly class TransferFondsApiService
             throw new ApiValidationException('Account with id: ' . $toAccountId . " doesn't exist");
         }
 
+        $newTransaction = $this->addNewTransaction($amount, $fromAccount, $toAccount);
+
+        $this->messageBus->dispatch(new TransactionMessage($newTransaction->getId()));
+        return ['id' => $newTransaction->getId()];
+    }
+
+    private function addNewTransaction(string $amount, Account $fromAccount, Account $toAccount): Transaction
+    {
         $newTransaction = new Transaction();
         $newTransaction->setFromAmount($amount);
         $newTransaction->setFromAccount($fromAccount);
@@ -63,9 +74,7 @@ readonly class TransferFondsApiService
         $newTransaction->setStatus(Transaction::STATUS_PENDING);
         $this->entityManager->persist($newTransaction);
         $this->entityManager->flush();
-
-        $this->messageBus->dispatch(new TransactionMessage($newTransaction->getId()));
-        return ['id' => $newTransaction->getId()];
+        return $newTransaction;
     }
 
     /**
@@ -77,6 +86,9 @@ readonly class TransferFondsApiService
     {
         $transaction = $this->transactionRepository->find($transactionId);
 
+        if($transaction->getStatus() === Transaction::STATUS_PROCESSED) {
+            throw new \Exception('Try to processed already processed transaction id ' . $transactionId);
+        }
 
         try {
             if ($transaction->getFromAccount()->getBalance() < $transaction->getFromAmount()) {
@@ -86,18 +98,9 @@ readonly class TransferFondsApiService
                 );
             }
             $this->entityManager->beginTransaction();
-            $toAmount    = $this->getToAmount($transaction);
-            $fromAccount = $transaction->getFromAccount();
-            $toAccount   = $transaction->getToAccount();
-            $transaction->setToAmount(strval($toAmount));
-            $transaction->setProcessed(new \DateTime());
-            $transaction->setStatus(Transaction::STATUS_PROCESSED);
-            $fromNewBalance = floatval($fromAccount->getBalance()) - floatval($transaction->getFromAmount());
-            $fromAccount->setBalance(strval($fromNewBalance));
-            $toNewBalance = floatval($toAccount->getBalance()) + $toAmount;
-            $toAccount->setBalance(strval($toNewBalance));
-            $this->entityManager->persist($fromAccount);
-            $this->entityManager->persist($toAccount);
+            $transaction = $this->prepareTransaction($transaction);
+            $this->entityManager->persist($transaction->getFromAccount());
+            $this->entityManager->persist($transaction->getToAccount());
             $this->entityManager->persist($transaction);
 
             $this->entityManager->flush();
@@ -108,15 +111,29 @@ readonly class TransferFondsApiService
         }
     }
 
-    /**
-     * @param $transactionId
-     * @return void
-     */
+    public function prepareTransaction(Transaction $transaction): Transaction
+    {
+        $toAmount    = $this->getToAmount($transaction);
+        $fromAccount = $transaction->getFromAccount();
+        $toAccount   = $transaction->getToAccount();
+        $transaction->setToAmount(strval($toAmount));
+        $transaction->setProcessed(new \DateTime());
+        $transaction->setStatus(Transaction::STATUS_PROCESSED);
+        $fromNewBalance = floatval($fromAccount->getBalance()) - floatval($transaction->getFromAmount());
+        $fromAccount->setBalance(strval($fromNewBalance));
+        $toNewBalance = floatval($toAccount->getBalance()) + $toAmount;
+        $toAccount->setBalance(strval($toNewBalance));
+        return $transaction;
+    }
+
+
     public function failTransaction($transactionId): void
     {
         $transaction = $this->transactionRepository->find($transactionId);
         if($transaction->getStatus() === Transaction::STATUS_PROCESSED) {
-            return;
+            throw new \Exception(
+                'Try to fail processed transaction id ' . $transactionId,
+            );
         }
         $transaction->setProcessed(new \DateTime());
         $transaction->setStatus(Transaction::STATUS_DECLINED);
@@ -124,7 +141,7 @@ readonly class TransferFondsApiService
         $this->entityManager->flush();
     }
 
-    private function getToAmount(Transaction $transaction): float
+    public function getToAmount(Transaction $transaction): float
     {
         $fromCurrency = $transaction->getFromAccount()->getCurrency()->getCode();
         $toCurrency   = $transaction->getToAccount()->getCurrency()->getCode();

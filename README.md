@@ -80,7 +80,9 @@ php bin/console dummyData 1000
 Make transfer funds api that saves transaction request  
 Make queue that process new transactions  
 Fail transactions that didn't process
-Add new container that process queue in background
+Add new container that process queue in background  
+Write test for services  
+Ask chatgpt to generate documentation for transactions and transfer fonds
 ```
 ```
 ```

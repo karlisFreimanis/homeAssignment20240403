@@ -9,15 +9,15 @@ use App\Repository\AccountRepository;
 use App\Repository\TransactionRepository;
 use Symfony\Component\HttpFoundation\Request;
 
-readonly class GetUserTransactionHistoryService
+class GetAccountTransactionHistoryService
 {
     /**
      * @param TransactionRepository $transactionRepository
      * @param AccountRepository     $accountRepository
      */
     public function __construct(
-        private TransactionRepository $transactionRepository,
-        private AccountRepository $accountRepository,
+        readonly private TransactionRepository $transactionRepository,
+        readonly private AccountRepository $accountRepository,
     )
     {
 
@@ -47,7 +47,7 @@ readonly class GetUserTransactionHistoryService
      * @param Transaction[] $transactions
      * @return array
      */
-    public function mapResult(array $transactions): array
+    private function mapResult(array $transactions): array
     {
         $transactionsMapped = [];
         foreach ($transactions as $transaction) {

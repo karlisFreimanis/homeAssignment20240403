@@ -7,13 +7,13 @@ use App\Exception\ApiValidationException;
 use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 
-readonly class GetUserAccountsApiService
+class GetUserAccountsApiService
 {
     /**
      * @param UserRepository $userRepository
      */
     public function __construct(
-        public UserRepository $userRepository,
+        readonly private UserRepository $userRepository,
     ) {
     }
 
