@@ -1,7 +1,9 @@
 # Home assignment
 
 ## Intro
-todo
+I have never used symfony as framework for daily work. So I read documentation and improvised.  
+Currently fo daily work I use PHP 7, so using PHP 8 may create some inconsistencies.  
+I am working with legacy project where unit test writing is limited to new features. It is something that I should improve.
 
 ## Installation
 ```
@@ -82,13 +84,7 @@ Make queue that process new transactions
 Fail transactions that didn't process
 Add new container that process queue in background  
 Write test for services  
-Ask chatgpt to generate documentation for transactions and transfer fonds
-```
-```
-```
-```
-```
-```
-```
-```
+Ask chatgpt to generate documentation for transactions and transfer fonds  
+Test if it works, and make short video for setup quick_demo.mp4  
+Write intro in Readme
 
